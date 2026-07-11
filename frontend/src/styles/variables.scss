@@ -1,0 +1,51 @@
+// ============================================================
+// CrediScope — Design Tokens
+// Premium FinTech palette: deep ink surfaces, brass/gold accent,
+// gradient system inspired by CRED/Revolut's dark, glassy UI.
+// ============================================================
+
+// ---- Brand gradient stops ----
+$gradient-primary: linear-gradient(135deg, #6B4EFF 0%, #B8862B 100%);
+$gradient-success: linear-gradient(135deg, #2F6F5E 0%, #4FD1A5 100%);
+$gradient-danger: linear-gradient(135deg, #A6432D 0%, #E8735A 100%);
+$gradient-dark-bg: linear-gradient(180deg, #0D1117 0%, #161B22 100%);
+$gradient-light-bg: linear-gradient(180deg, #F5F3EF 0%, #EDEAE3 100%);
+
+// ---- Core palette (feeds Bootstrap variable overrides in custom.scss) ----
+$brand-primary: #6B4EFF;   // electric violet — primary actions, active nav
+$brand-accent: #B8862B;    // brass — streak, highlights
+$brand-success: #2F6F5E;   // income / positive
+$brand-danger: #A6432D;    // expense / negative
+$brand-warning: #D9A64A;
+
+// ---- Light theme surfaces ----
+$light-bg: #F5F3EF;
+$light-surface: #FFFFFF;
+$light-surface-glass: rgba(255, 255, 255, 0.65);
+$light-border: rgba(27, 42, 34, 0.08);
+$light-text: #1B2A22;
+$light-text-soft: #5B655D;
+
+// ---- Dark theme surfaces ----
+$dark-bg: #0D1117;
+$dark-surface: #161B22;
+$dark-surface-glass: rgba(22, 27, 34, 0.6);
+$dark-border: rgba(255, 255, 255, 0.08);
+$dark-text: #EDEAE3;
+$dark-text-soft: #9BA5A0;
+
+// ---- Shape & motion scale ----
+$radius-sm: 0.65rem;
+$radius-md: 1rem;
+$radius-lg: 1.5rem;
+$radius-pill: 999px;
+
+$shadow-glass-light: 0 8px 32px rgba(27, 42, 34, 0.08);
+$shadow-glass-dark: 0 8px 32px rgba(0, 0, 0, 0.45);
+
+$transition-base: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+
+// ---- Typography ----
+$font-display: 'Fraunces', serif;
+$font-body: 'Inter', system-ui, sans-serif;
+$font-mono: 'IBM Plex Mono', monospace;

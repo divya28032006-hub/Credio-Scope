@@ -1,0 +1,69 @@
+// ============================================================
+// Bootstrap variable overrides MUST come before the Bootstrap
+// import itself — Sass variables are override-by-redeclaration.
+// ============================================================
+@use 'variables' as v;
+
+$primary: v.$brand-primary;
+$success: v.$brand-success;
+$danger: v.$brand-danger;
+$warning: v.$brand-warning;
+$light: v.$light-surface;
+$dark: v.$dark-bg;
+
+$body-bg: v.$light-bg;
+$body-color: v.$light-text;
+
+$border-radius: v.$radius-sm;
+$border-radius-lg: v.$radius-md;
+$border-radius-xl: v.$radius-lg;
+
+$font-family-sans-serif: #{v.$font-body};
+$font-family-monospace: #{v.$font-mono};
+
+$card-border-radius: v.$radius-lg;
+$btn-border-radius: v.$radius-pill;
+$input-border-radius: v.$radius-sm;
+
+@import '~bootstrap/scss/bootstrap';
+
+@import 'glassmorphism';
+@import 'dark-theme';
+
+// ---- Global shared utility classes ----
+body {
+  transition: background 0.3s ease, color 0.3s ease;
+}
+
+.font-tabular {
+  font-variant-numeric: tabular-nums;
+}
+
+.font-display {
+  font-family: v.$font-display;
+}
+
+// Streak "stamp" element
+.stamp {
+  position: relative;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 84px;
+  height: 84px;
+  border-radius: 50%;
+  border: 2.5px dashed v.$brand-accent;
+  color: v.$brand-accent;
+  transform: rotate(-6deg);
+  font-family: v.$font-display;
+}
+
+// Buttons get a slightly elevated, animated feel by default
+.btn {
+  transition: v.$transition-base;
+
+  &:active {
+    transform: scale(0.97);
+  }
+}

@@ -1,0 +1,70 @@
+@use 'variables' as v;
+
+// ============================================================
+// Reusable glass-surface mixins/classes
+// ============================================================
+
+@mixin glass-surface($bg, $border, $shadow) {
+  background: $bg;
+  border: 1px solid $border;
+  backdrop-filter: blur(16px) saturate(160%);
+  -webkit-backdrop-filter: blur(16px) saturate(160%);
+  box-shadow: $shadow;
+}
+
+.glass-card {
+  @include glass-surface(v.$light-surface-glass, v.$light-border, v.$shadow-glass-light);
+  border-radius: v.$radius-lg;
+  transition: v.$transition-base;
+
+  [data-bs-theme='dark'] & {
+    @include glass-surface(v.$dark-surface-glass, v.$dark-border, v.$shadow-glass-dark);
+  }
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 40px rgba(27, 42, 34, 0.14);
+
+    [data-bs-theme='dark'] & {
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.55);
+    }
+  }
+}
+
+.glass-nav {
+  @include glass-surface(v.$light-surface-glass, v.$light-border, none);
+
+  [data-bs-theme='dark'] & {
+    @include glass-surface(v.$dark-surface-glass, v.$dark-border, none);
+  }
+}
+
+.glass-modal .modal-content {
+  @include glass-surface(rgba(255, 255, 255, 0.92), v.$light-border, v.$shadow-glass-light);
+  border-radius: v.$radius-lg;
+
+  [data-bs-theme='dark'] & {
+    @include glass-surface(rgba(22, 27, 34, 0.92), v.$dark-border, v.$shadow-glass-dark);
+  }
+}
+
+// Gradient text utility — used for headings/hero numbers
+.gradient-text {
+  background: v.$gradient-primary;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+// Pill badge with gradient background (streak, status chips)
+.gradient-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.35rem 0.9rem;
+  border-radius: v.$radius-pill;
+  background: v.$gradient-primary;
+  color: #fff;
+  font-weight: 600;
+  font-size: 0.8rem;
+}

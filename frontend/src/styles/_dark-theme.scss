@@ -1,0 +1,69 @@
+@use 'variables' as v;
+
+// ============================================================
+// Bootstrap 5.3 dark mode via [data-bs-theme="dark"]
+// Overrides CSS custom properties Bootstrap components consume.
+// ============================================================
+
+[data-bs-theme='dark'] {
+  --bs-body-bg: #{v.$dark-bg};
+  --bs-body-color: #{v.$dark-text};
+  --bs-border-color: #{v.$dark-border};
+  --bs-secondary-color: #{v.$dark-text-soft};
+
+  background: v.$gradient-dark-bg;
+  min-height: 100vh;
+
+  .card {
+    background-color: v.$dark-surface;
+    border-color: v.$dark-border;
+    color: v.$dark-text;
+  }
+
+  .form-control,
+  .form-select {
+    background-color: v.$dark-surface;
+    border-color: v.$dark-border;
+    color: v.$dark-text;
+
+    &::placeholder {
+      color: v.$dark-text-soft;
+    }
+
+    &:focus {
+      background-color: v.$dark-surface;
+      color: v.$dark-text;
+      border-color: v.$brand-primary;
+    }
+  }
+
+  .table {
+    --bs-table-bg: transparent;
+    --bs-table-color: #{v.$dark-text};
+    --bs-table-border-color: #{v.$dark-border};
+  }
+
+  .dropdown-menu {
+    background-color: v.$dark-surface;
+    border-color: v.$dark-border;
+  }
+
+  .dropdown-item {
+    color: v.$dark-text;
+
+    &:hover,
+    &:focus {
+      background-color: rgba(255, 255, 255, 0.06);
+      color: v.$dark-text;
+    }
+  }
+
+  .text-muted {
+    color: v.$dark-text-soft !important;
+  }
+}
+
+[data-bs-theme='light'] {
+  background: v.$gradient-light-bg;
+  min-height: 100vh;
+}
