@@ -16,7 +16,7 @@ const getTransporter = () => {
           pass: process.env.SMTP_PASS
         }
       : undefined,
-    connectionTimeout: 8000, // fail fast instead of hanging if the SMTP server doesn't respond
+    connectionTimeout: 8000,
     greetingTimeout: 8000,
     socketTimeout: 8000
   });
@@ -27,7 +27,6 @@ const getTransporter = () => {
 const clientUrl = () => process.env.CLIENT_URL || 'http://localhost:5173';
 
 const send = async ({ to, subject, html, text }) => {
-  // If SMTP isn't configured, don't crash the app - just log so local dev keeps working.
   if (!process.env.SMTP_HOST) {
     console.log(`[email:skipped - no SMTP_HOST set] to=${to} subject="${subject}"`);
     return;
@@ -42,8 +41,6 @@ const send = async ({ to, subject, html, text }) => {
       text
     });
   } catch (err) {
-    // Log and swallow: a slow/broken SMTP connection should never hang
-    // or crash the request that triggered this email.
     console.error(`[email:failed] to=${to} subject="${subject}" -`, err.message);
   }
 };
