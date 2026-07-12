@@ -1,45 +1,24 @@
-import nodemailer from 'nodemailer';
+import { Resend } from 'resend';
 
-let transporter = null;
-
-const getTransporter = () => {
-  if (transporter) return transporter;
-
-  transporter = nodemailer.createTransport({
-    host: process.env.SMTP_HOST,
-    port: Number(process.env.SMTP_PORT || 587),
-    secure: Number(process.env.SMTP_PORT) === 465,
-    family: 4, // force IPv4 - Render's outbound network can't reach Gmail over IPv6
-    auth: process.env.SMTP_USER
-      ? {
-          user: process.env.SMTP_USER,
-          pass: process.env.SMTP_PASS
-        }
-      : undefined,
-    connectionTimeout: 8000,
-    greetingTimeout: 8000,
-    socketTimeout: 8000
-  });
-
-  return transporter;
-};
+const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
 
 const clientUrl = () => process.env.CLIENT_URL || 'http://localhost:5173';
 
 const send = async ({ to, subject, html, text }) => {
-  if (!process.env.SMTP_HOST) {
-    console.log(`[email:skipped - no SMTP_HOST set] to=${to} subject="${subject}"`);
+  if (!resend) {
+    console.log(`[email:skipped - no RESEND_API_KEY set] to=${to} subject="${subject}"`);
     return;
   }
 
   try {
-    await getTransporter().sendMail({
-      from: process.env.EMAIL_FROM || 'CrediScope <no-reply@crediscope.app>',
+    const { error } = await resend.emails.send({
+      from: process.env.EMAIL_FROM || 'CrediScope <onboarding@resend.dev>',
       to,
       subject,
       html,
       text
     });
+    if (error) throw new Error(error.message || JSON.stringify(error));
   } catch (err) {
     console.error(`[email:failed] to=${to} subject="${subject}" -`, err.message);
   }
