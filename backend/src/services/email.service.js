@@ -1,6 +1,4 @@
-import brevoPkg from '@getbrevo/brevo';
-
-const { TransactionalEmailsApi, TransactionalEmailsApiApiKeys, SendSmtpEmail } = brevoPkg;
+import { TransactionalEmailsApi, TransactionalEmailsApiApiKeys, SendSmtpEmail } from '@getbrevo/brevo';
 
 let apiInstance = null;
 
