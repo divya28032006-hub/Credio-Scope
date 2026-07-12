@@ -1,13 +1,11 @@
-import { TransactionalEmailsApi, TransactionalEmailsApiApiKeys, SendSmtpEmail } from '@getbrevo/brevo';
+import { BrevoClient } from '@getbrevo/brevo';
 
-let apiInstance = null;
+let brevo = null;
 
 const getBrevoClient = () => {
-  if (apiInstance) return apiInstance;
-
-  apiInstance = new TransactionalEmailsApi();
-  apiInstance.setApiKey(TransactionalEmailsApiApiKeys.apiKey, process.env.BREVO_API_KEY);
-  return apiInstance;
+  if (brevo) return brevo;
+  brevo = new BrevoClient({ apiKey: process.env.BREVO_API_KEY });
+  return brevo;
 };
 
 const clientUrl = () => process.env.CLIENT_URL || 'http://localhost:5173';
@@ -19,20 +17,18 @@ const send = async ({ to, subject, html, text }) => {
   }
 
   try {
-    const email = new SendSmtpEmail();
-    email.sender = {
-      name: 'CrediScope',
-      email: process.env.EMAIL_FROM_ADDRESS || process.env.SMTP_USER // must match your verified Brevo sender
-    };
-    email.to = [{ email: to }];
-    email.subject = subject;
-    email.htmlContent = html;
-    email.textContent = text;
-
-    await getBrevoClient().sendTransacEmail(email);
+    await getBrevoClient().transactionalEmails.sendTransacEmail({
+      subject,
+      htmlContent: html,
+      textContent: text,
+      sender: {
+        name: 'CrediScope',
+        email: process.env.EMAIL_FROM_ADDRESS
+      },
+      to: [{ email: to }]
+    });
   } catch (err) {
-    const message = err?.response?.body?.message || err.message;
-    console.error(`[email:failed] to=${to} subject="${subject}" -`, message);
+    console.error(`[email:failed] to=${to} subject="${subject}" -`, err.message);
   }
 };
 
