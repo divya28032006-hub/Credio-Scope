@@ -1,26 +1,40 @@
-import { Resend } from 'resend';
+import brevoPkg from '@getbrevo/brevo';
 
-const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
+const { TransactionalEmailsApi, TransactionalEmailsApiApiKeys, SendSmtpEmail } = brevoPkg;
+
+let apiInstance = null;
+
+const getBrevoClient = () => {
+  if (apiInstance) return apiInstance;
+
+  apiInstance = new TransactionalEmailsApi();
+  apiInstance.setApiKey(TransactionalEmailsApiApiKeys.apiKey, process.env.BREVO_API_KEY);
+  return apiInstance;
+};
 
 const clientUrl = () => process.env.CLIENT_URL || 'http://localhost:5173';
 
 const send = async ({ to, subject, html, text }) => {
-  if (!resend) {
-    console.log(`[email:skipped - no RESEND_API_KEY set] to=${to} subject="${subject}"`);
+  if (!process.env.BREVO_API_KEY) {
+    console.log(`[email:skipped - no BREVO_API_KEY set] to=${to} subject="${subject}"`);
     return;
   }
 
   try {
-    const { error } = await resend.emails.send({
-      from: process.env.EMAIL_FROM || 'CrediScope <onboarding@resend.dev>',
-      to,
-      subject,
-      html,
-      text
-    });
-    if (error) throw new Error(error.message || JSON.stringify(error));
+    const email = new SendSmtpEmail();
+    email.sender = {
+      name: 'CrediScope',
+      email: process.env.EMAIL_FROM_ADDRESS || process.env.SMTP_USER // must match your verified Brevo sender
+    };
+    email.to = [{ email: to }];
+    email.subject = subject;
+    email.htmlContent = html;
+    email.textContent = text;
+
+    await getBrevoClient().sendTransacEmail(email);
   } catch (err) {
-    console.error(`[email:failed] to=${to} subject="${subject}" -`, err.message);
+    const message = err?.response?.body?.message || err.message;
+    console.error(`[email:failed] to=${to} subject="${subject}" -`, message);
   }
 };
 
