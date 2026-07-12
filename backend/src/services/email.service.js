@@ -9,12 +9,16 @@ const getTransporter = () => {
     host: process.env.SMTP_HOST,
     port: Number(process.env.SMTP_PORT || 587),
     secure: Number(process.env.SMTP_PORT) === 465,
+    family: 4, // force IPv4 - Render's outbound network can't reach Gmail over IPv6
     auth: process.env.SMTP_USER
       ? {
           user: process.env.SMTP_USER,
           pass: process.env.SMTP_PASS
         }
-      : undefined
+      : undefined,
+    connectionTimeout: 8000, // fail fast instead of hanging if the SMTP server doesn't respond
+    greetingTimeout: 8000,
+    socketTimeout: 8000
   });
 
   return transporter;
@@ -29,13 +33,19 @@ const send = async ({ to, subject, html, text }) => {
     return;
   }
 
-  await getTransporter().sendMail({
-    from: process.env.EMAIL_FROM || 'CrediScope <no-reply@crediscope.app>',
-    to,
-    subject,
-    html,
-    text
-  });
+  try {
+    await getTransporter().sendMail({
+      from: process.env.EMAIL_FROM || 'CrediScope <no-reply@crediscope.app>',
+      to,
+      subject,
+      html,
+      text
+    });
+  } catch (err) {
+    // Log and swallow: a slow/broken SMTP connection should never hang
+    // or crash the request that triggered this email.
+    console.error(`[email:failed] to=${to} subject="${subject}" -`, err.message);
+  }
 };
 
 export const sendPasswordResetEmail = async (user, resetToken) => {
