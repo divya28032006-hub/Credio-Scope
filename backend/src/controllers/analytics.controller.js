@@ -8,13 +8,28 @@ const startOfMonth = (offset = 0) => {
   return date;
 };
 
+// Turns [{ _id: { month: '2026-11', type: 'income' }, total: 100000 }, ...]
+// into    [{ month: '2026-11', income: 100000, expense: 0, savings: 100000 }, ...]
+// This is the exact shape the frontend charts expect.
+export const pivotMonthly = (rows) => {
+  const byMonth = new Map();
+  for (const { _id, total } of rows) {
+    if (!byMonth.has(_id.month)) byMonth.set(_id.month, { month: _id.month, income: 0, expense: 0 });
+    byMonth.get(_id.month)[_id.type] = total;
+  }
+  return [...byMonth.values()]
+    .sort((a, b) => a.month.localeCompare(b.month))
+    .map((m) => ({ ...m, savings: m.income - m.expense }));
+};
+
 export const getDashboard = async (req, res, next) => {
   try {
     const currentStart = startOfMonth();
     const nextStart = startOfMonth(1);
     const previousStart = startOfMonth(-1);
+    const trendStart = startOfMonth(-11); // last 12 months incl. current
 
-    const [totals, recentTransactions, monthlyTotals, categoryTotals, topMerchants, savingsTrend, previousTotals] =
+    const [totals, recentTransactions, monthlyRows, categoryTotals, topMerchants, previousTotals] =
       await Promise.all([
         Transaction.aggregate([
           { $match: { user: req.user._id, date: { $gte: currentStart, $lt: nextStart } } },
@@ -22,15 +37,13 @@ export const getDashboard = async (req, res, next) => {
         ]),
         Transaction.find({ user: req.user._id }).sort({ date: -1, createdAt: -1 }).limit(6),
         Transaction.aggregate([
-          { $match: { user: req.user._id } },
+          { $match: { user: req.user._id, date: { $gte: trendStart, $lt: nextStart } } },
           {
             $group: {
               _id: { month: { $dateToString: { format: '%Y-%m', date: '$date' } }, type: '$type' },
               total: { $sum: '$amount' }
             }
-          },
-          { $sort: { '_id.month': 1 } },
-          { $limit: 24 }
+          }
         ]),
         Transaction.aggregate([
           { $match: { user: req.user._id, type: 'expense', date: { $gte: currentStart, $lt: nextStart } } },
@@ -44,48 +57,31 @@ export const getDashboard = async (req, res, next) => {
           { $limit: 5 }
         ]),
         Transaction.aggregate([
-          { $match: { user: req.user._id } },
-          {
-            $group: {
-              _id: { month: { $dateToString: { format: '%Y-%m', date: '$date' } }, type: '$type' },
-              total: { $sum: '$amount' }
-            }
-          },
-          { $sort: { '_id.month': 1 } }
-        ]),
-        Transaction.aggregate([
           { $match: { user: req.user._id, date: { $gte: previousStart, $lt: currentStart } } },
           { $group: { _id: '$type', total: { $sum: '$amount' } } }
         ])
       ]);
 
-    const currentIncome = totals.find((item) => item._id === 'income')?.total || 0;
-    const currentExpenses = totals.find((item) => item._id === 'expense')?.total || 0;
-    const previousExpenses = previousTotals.find((item) => item._id === 'expense')?.total || 0;
-    const savings = currentIncome - currentExpenses;
-    const savingsPercentage = currentIncome ? Math.round((savings / currentIncome) * 100) : 0;
-    const highestCategory = categoryTotals[0]?._id || 'None';
-    const spendingIncrease =
-      previousExpenses > 0 ? Math.round(((currentExpenses - previousExpenses) / previousExpenses) * 100) : null;
+    const income = totals.find((t) => t._id === 'income')?.total || 0;
+    const expense = totals.find((t) => t._id === 'expense')?.total || 0;
+    const previousExpense = previousTotals.find((t) => t._id === 'expense')?.total || 0;
+    const savings = income - expense;
+    const savingsRate = income ? Math.round((savings / income) * 100) : 0;
+    const monthly = pivotMonthly(monthlyRows);
 
+    // Keys below match what Dashboard.jsx and Analytics.jsx read.
     res.json({
-      totals: {
-        income: currentIncome,
-        expenses: currentExpenses,
-        savings,
-        savingsPercentage
-      },
+      summary: { income, expense, savings, savingsRate },
       recentTransactions,
-      charts: {
-        monthlyTotals,
-        categoryTotals,
-        topMerchants,
-        savingsTrend
-      },
+      monthlyTotals: monthly.map(({ month, income: i, expense: e }) => ({ month, income: i, expense: e })),
+      savingsTrend: monthly.map(({ month, savings: s }) => ({ month, savings: s })),
+      categoryBreakdown: categoryTotals.map((c) => ({ category: c._id, amount: c.total })),
+      topMerchants: topMerchants.map((m) => ({ merchant: m._id, total: m.total, count: m.count })),
       insights: {
-        highestSpendingCategory: highestCategory,
-        spendingIncreaseComparedToPreviousMonth: spendingIncrease,
-        savingsRate: savingsPercentage
+        highestSpendingCategory: categoryTotals[0]?._id || 'None',
+        spendingIncreaseComparedToPreviousMonth:
+          previousExpense > 0 ? Math.round(((expense - previousExpense) / previousExpense) * 100) : null,
+        savingsRate
       }
     });
   } catch (error) {
